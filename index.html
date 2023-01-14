@@ -1,0 +1,112 @@
+<section>
+<!-- カメラ映像 -->
+<video id="camera" width="300" height="200" muted></video>
+
+<!-- 処理用 -->
+<canvas id="picture" width="300" height="200"></canvas>
+</section>
+
+<input id ="start" type="button" value="start">
+<input id="riaer" type="button" value="riaer">
+<input id="front" type="button" value="front">
+
+<script>
+const video = document.getElementById('camera');
+const canvas = document.getElementById('picture');
+const ctx = canvas.getContext("2d");
+const riaer = document.getElementById("riaer");
+const front = document.getElementById("front");
+const start = document.getElementById("start");
+
+// 現在のStream
+let curSTREAM = null;
+
+
+/** カメラ設定 */
+const constraints = {
+    audio: false,
+    video: {
+        width: 300,
+        height: 200,
+        facingMode: null
+        //   facingMode: "user"                    // フロントカメラを利用する
+        //   facingMode: { exact: "environment" }  // リアカメラを利用する
+    }
+};
+
+
+/**
+ *  カメラを<video>と同期
+*/
+
+const camerastart = async function(){
+    navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+    curSTREAM = stream;   // 前後の切り替え用に保持
+    video.srcObject = stream;
+    video.onloadedmetadata = (e) => {
+        video.play();
+        
+    };}).catch((err) => {
+        console.log(err.name + ": " + err.message);
+    });
+}
+
+
+/**
+*canvasにカメラを表示
+*/
+function checkPicture() {
+    // カメラの映像をCanvasに複写
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+}
+
+//reloade
+let count = 0;
+setInterval(()=> {                   
+    checkPicture();
+  }, 1000); 
+
+
+riaer.addEventListener("click",function(){
+    constraints.video.facingMode = { exact: "environment" };
+    curSTREAM.getVideoTracks().forEach( (camera) => {
+        camera.stop();
+    });
+    camerastart();
+})
+
+front.addEventListener("click",function(){
+    constraints.video.facingMode = "user";
+    curSTREAM.getVideoTracks().forEach( (camera) => {
+        camera.stop();
+    });
+    camerastart();
+});
+
+start.addEventListener("click",function(){
+    camerastart();
+})
+</script>
+
+<style>
+    ection {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    #camera {
+        border: 1px solid gray;
+    }
+    
+    #picture {
+        border: 1px solid gray;
+        margin-left: 20px;
+    }
+    
+    input[type="button"] {
+        margin-top: 20px;
+        padding: 10px;
+        font-size: 16px;
+    }
+</style>
